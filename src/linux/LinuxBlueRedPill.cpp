@@ -964,11 +964,9 @@ int LinuxVMHyperDetector::VMware_HV_Port_Check_Legacy()
     }
 #endif
 
+    // Reset eflag if it was set by signal handler (atomic check-and-reset)
     sig_atomic_t expected = 1;
-    if (LVMHVD::eflag.compare_exchange_strong(expected, 0, std::memory_order_relaxed))
-    {
-        // eflag was 1, now reset to 0
-    }
+    LVMHVD::eflag.compare_exchange_strong(expected, 0, std::memory_order_relaxed);
 
     sigaction(SIGSEGV, &old_act, nullptr);
     copy_magic(_HVID, NOTFOUND_STR);
