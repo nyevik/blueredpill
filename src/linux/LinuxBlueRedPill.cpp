@@ -9,6 +9,7 @@
 #include <iostream>
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cerrno>
 #include <chrono>
 #include <csignal>
@@ -76,11 +77,10 @@ static inline void copy_magic(char dst[HV_BRAND_MAX_NAME_LEN], const char* src)
 
 namespace LVMHVD
 {
-    volatile sig_atomic_t eflag = 0; //intended to be safely 
-    /** modified from within a signal handler, SIGSEGV_Handler present.
+    std::atomic<sig_atomic_t> eflag{0}; // Thread-safe flag for signal handlers
+    /** Modified from within a signal handler, SIGSEGV_Handler present.
     Can change asynchronously outside of normal program flow.
-    *****! Not appropriate for multi-threaded use !******
-    @todo Consider making this thread-safe if multi-threaded use is required.(std::atomic<sig_atomic_t>)
+    Thread-safe for multi-threaded use via std::atomic.
     */
     sigjmp_buf sigill_jmp;
 
