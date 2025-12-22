@@ -85,7 +85,7 @@ namespace LVMHVD
     sigjmp_buf sigill_jmp;
 
     void SIGILL_Handler(int) { siglongjmp(sigill_jmp, 1); }
-    void SIGSEGV_Handler(int) { eflag = 1; }
+    void SIGSEGV_Handler(int) { eflag.store(1, std::memory_order_relaxed); }
 }
 
 // ----------------------------- Utility (modern) -----------------------------
@@ -964,8 +964,8 @@ int LinuxVMHyperDetector::VMware_HV_Port_Check_Legacy()
     }
 #endif
 
-    if (LVMHVD::eflag == 1)
-        LVMHVD::eflag = 0;
+    if (LVMHVD::eflag.load(std::memory_order_relaxed) == 1)
+        LVMHVD::eflag.store(0, std::memory_order_relaxed);
 
     sigaction(SIGSEGV, &old_act, nullptr);
     copy_magic(_HVID, NOTFOUND_STR);
