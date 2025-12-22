@@ -9,6 +9,7 @@
 #include <iostream>
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cerrno>
 #include <chrono>
 #include <csignal>
@@ -76,11 +77,15 @@ static inline void copy_magic(char dst[HV_BRAND_MAX_NAME_LEN], const char* src)
 
 namespace LVMHVD
 {
-    volatile sig_atomic_t eflag = 0;
+    /** Modified from within a signal handler, SIGSEGV_Handler present.
+    Can change asynchronously outside of normal program flow.
+    Thread-safe for multi-threaded use via std::atomic.
+    */
+    std::atomic<sig_atomic_t> eflag{0}; // Thread-safe flag for signal handlers
     sigjmp_buf sigill_jmp;
 
     void SIGILL_Handler(int) { siglongjmp(sigill_jmp, 1); }
-    void SIGSEGV_Handler(int) { eflag = 1; }
+    void SIGSEGV_Handler(int) { eflag.store(1, std::memory_order_relaxed); }
 }
 
 // ----------------------------- Utility (modern) -----------------------------
@@ -959,8 +964,9 @@ int LinuxVMHyperDetector::VMware_HV_Port_Check_Legacy()
     }
 #endif
 
-    if (LVMHVD::eflag == 1)
-        LVMHVD::eflag = 0;
+    // Reset eflag if it was set by signal handler (atomic check-and-reset)
+    sig_atomic_t expected = 1;
+    LVMHVD::eflag.compare_exchange_strong(expected, 0, std::memory_order_relaxed);
 
     sigaction(SIGSEGV, &old_act, nullptr);
     copy_magic(_HVID, NOTFOUND_STR);
