@@ -45,4 +45,7 @@ linux-safe-vm-detect
 
 # all patches
 *.patch
-*.diff  
+*.diff
+
+# --- CodeQL ---
+_codeql_detected_source_root  
