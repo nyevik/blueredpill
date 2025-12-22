@@ -76,7 +76,12 @@ static inline void copy_magic(char dst[HV_BRAND_MAX_NAME_LEN], const char* src)
 
 namespace LVMHVD
 {
-    volatile sig_atomic_t eflag = 0;
+    volatile sig_atomic_t eflag = 0; //intended to be safely 
+    /** modified from within a signal handler, SIGSEGV_Handler present.
+    Can change asynchronously outside of normal program flow.
+    *****! Not appropriate for multi-threaded use !******
+    @todo Consider making this thread-safe if multi-threaded use is required.(std::atomic<sig_atomic_t>)
+    */
     sigjmp_buf sigill_jmp;
 
     void SIGILL_Handler(int) { siglongjmp(sigill_jmp, 1); }
