@@ -24,5 +24,6 @@ int main(int argc, char** argv)
         for (const auto &e : d.GetEvidence())
             std::cout << "- " << e << "\n";
     }
+   
     return is_vm ? 0 : 1;
 }

@@ -34,6 +34,7 @@
 
 /** Typical magic string length including terminating null. */
 #define HV_BRAND_MAX_NAME_LEN 13
+using u64 = unsigned long long;  
 
 /**
  * Enable risky legacy probes (default: 0).
@@ -152,7 +153,20 @@ private:
     static bool ReadTextFile_Modern(const std::string &path, std::string &out, size_t maxBytes = 64 * 1024);
     static std::string Trim_Modern(std::string s);
     static bool ContainsIcase_Modern(const std::string &haystack, const std::string &needle);
+    /**
+     * @brief Get the value of the RCX register.
+     * @return The current value of the RCX register.
+     */
+    static u64 getRCX(void)
+    {
+        u64 value = 0;
+        // Capture RCX into a C++ variable and return it.
+        // Note: Using "pop %rcx" here would corrupt the stack; do not do that.
+        __asm__ volatile("mov %%rcx, %0" : "=r"(value));
+        return value;
+    }//end getRCX()
 
+private:
     struct ExecResult
     {
         int exit_code = -1;              ///< process exit code (or -1 if not started)
