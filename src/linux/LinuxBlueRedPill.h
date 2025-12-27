@@ -166,7 +166,6 @@ private:
         return value;
     }//end getRCX()
 
-private:
     struct ExecResult
     {
         int exit_code = -1;              ///< process exit code (or -1 if not started)
